@@ -657,24 +657,32 @@ class _SalesTabState extends State<SalesTab>
                           : 'Order',
                       style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
                     ),
+                    SizedBox(height: 8),
                     Text(
                       'Date: ${DateFormat('MMM dd, yyyy - hh:mm a').format(DateTime.parse(sale.createdAt).toLocal())}',
                       style: GoogleFonts.poppins(),
                     ),
+                    SizedBox(height: 8),
                     Text(
                       'Customer: ${sale.customer.fullname}',
                       style: GoogleFonts.poppins(),
                     ),
+                    SizedBox(height: 8),
                     Text(
                       'Email: ${sale.customer.email}',
                       style: GoogleFonts.poppins(),
                     ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Payment Channel: ${sale.paymentChannel}',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "Recorded By: ${sale.recordedBy}",
+                      style: GoogleFonts.poppins(),
+                    ),
 
-                    
-
-                    
-
-                    
                     const SizedBox(height: 16),
                     Text(
                       'Items:',
@@ -694,7 +702,7 @@ class _SalesTabState extends State<SalesTab>
                               ),
                             ),
                             Text(
-                              '${entry.quantity} x \$${entry.unitPrice.toStringAsFixed(2)}',
+                              '${entry.quantity} x GHS ${entry.unitPrice.toStringAsFixed(2)}',
                               style: GoogleFonts.poppins(),
                             ),
                           ],
@@ -712,7 +720,7 @@ class _SalesTabState extends State<SalesTab>
                           ),
                         ),
                         Text(
-                          '\$${sale.totalPrice.toStringAsFixed(2)}',
+                          'GHS ${sale.totalPrice.toStringAsFixed(2)}',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
                             color: Colors.blue[700],
@@ -727,58 +735,57 @@ class _SalesTabState extends State<SalesTab>
               // Close button
               const SizedBox(height: 20),
               GestureDetector(
+                onTap: () => makePhoneCall(sale.customer.phoneNumber),
+                child: Container(
+                  height: 56,
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                        spreadRadius: 0,
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        spreadRadius: 0,
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
                       onTap: () => makePhoneCall(sale.customer.phoneNumber),
-                      child: Container(
-                        height: 56,
-                        width: MediaQuery.of(context).size.width,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF4CAF50,
-                              ).withValues(alpha: 0.3),
-                              spreadRadius: 0,
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              spreadRadius: 0,
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.phone, color: Colors.white, size: 24),
+                            Text(
+                              " Call Customer",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () =>
-                                makePhoneCall(sale.customer.phoneNumber),
-                            child: Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                Icons.phone,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                                  Text(" Call Customer", style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),),
-                                  
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                       ),
-                    )
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

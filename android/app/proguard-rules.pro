@@ -1,0 +1,6 @@
+-keep class retrofit2.** { *; }
+-keep class okhttp3.** { *; }
+-keep class okio.** { *; }
+-keep class com.google.gson.** { *; }
+-dontwarn javax.annotation.**
+-dontwarn kotlin.Unit
