@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -154,16 +156,16 @@ class _SalesTabState extends State<SalesTab>
   }
 
   Future<void> _refreshProducts() async {
-  await _loadProducts();
-}
+    await _loadProducts();
+  }
 
-Future<void> _refreshSales() async {
-  setState(() {
-    _currentPage = 0;
-    _filteredSales.clear();
-  });
-  await _loadSales();
-}
+  Future<void> _refreshSales() async {
+    setState(() {
+      _currentPage = 0;
+      _filteredSales.clear();
+    });
+    await _loadSales();
+  }
 
   List<String> paymentChannels = ['Cash', 'Mobile Money', 'Bank Transfer'];
   Map<String, String> paymentChannelsMap = {
@@ -226,59 +228,62 @@ Future<void> _refreshSales() async {
           Column(
             children: [
               Expanded(
-                child: RefreshIndicator(onRefresh: _refreshProducts, child: Consumer<SalesViewModel>(
-                  builder: (context, salesViewModel, child) {
-                    if (salesViewModel.isLoading &&
-                        salesViewModel.products.isEmpty) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                child: RefreshIndicator(
+                  onRefresh: _refreshProducts,
+                  child: Consumer<SalesViewModel>(
+                    builder: (context, salesViewModel, child) {
+                      if (salesViewModel.isLoading &&
+                          salesViewModel.products.isEmpty) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                    if (salesViewModel.errorMessage.isNotEmpty &&
-                        salesViewModel.products.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Error: ${salesViewModel.errorMessage}',
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => salesViewModel.loadProducts(),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    if (salesViewModel.products.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No products available',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey[600],
+                      if (salesViewModel.errorMessage.isNotEmpty &&
+                          salesViewModel.products.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Error: ${salesViewModel.errorMessage}',
+                                style: const TextStyle(color: Colors.red),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () => salesViewModel.loadProducts(),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
 
-                    return _buildProductGrid(salesViewModel.products);
-                  },
-                )),
+                      if (salesViewModel.products.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.inventory_2_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No products available',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return _buildProductGrid(salesViewModel.products);
+                    },
+                  ),
+                ),
               ),
             ],
           ),
@@ -288,22 +293,24 @@ Future<void> _refreshSales() async {
           // Sales History Tab
         ],
       ),
-      floatingActionButton: _accountType != 'admin' && _tabController.index == 0 ?null : FloatingActionButton(
-        onPressed: () {
-          if (_tabController.index == 0) {
-            _showAddProductBottomSheet();
-          } else {
-            _showAddSaleBottomSheet(context);
-          }
-        },
-        backgroundColor: Colors.blue[700],
-        child: Icon(
-          _tabController.index == 0
-              ? Icons.add_business
-              : Icons.add_shopping_cart,
-          color: Colors.white,
-        ),
-      ),
+      floatingActionButton: _accountType != 'admin' && _tabController.index == 0
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                if (_tabController.index == 0) {
+                  _showAddProductBottomSheet();
+                } else {
+                  _showAddSaleBottomSheet(context);
+                }
+              },
+              backgroundColor: Colors.blue[700],
+              child: Icon(
+                _tabController.index == 0
+                    ? Icons.add_business
+                    : Icons.add_shopping_cart,
+                color: Colors.white,
+              ),
+            ),
     );
   }
 
@@ -408,197 +415,205 @@ Future<void> _refreshSales() async {
   }
 
   Widget _buildSalesHistoryTab() {
-    return RefreshIndicator(onRefresh: _refreshSales, child: Consumer<SalesViewModel>(
-      builder: (context, salesViewModel, child) {
-        // Use filtered sales if search is active, otherwise use all sales
-        final displaySales =
-            (_searchQuery.isNotEmpty || _startDate != null || _endDate != null)
-            ? _filteredSales
-            : salesViewModel.sales;
+    return RefreshIndicator(
+      onRefresh: _refreshSales,
+      child: Consumer<SalesViewModel>(
+        builder: (context, salesViewModel, child) {
+          // Use filtered sales if search is active, otherwise use all sales
+          final displaySales =
+              (_searchQuery.isNotEmpty ||
+                  _startDate != null ||
+                  _endDate != null)
+              ? _filteredSales
+              : salesViewModel.sales;
 
-        if (salesViewModel.isLoading && salesViewModel.sales.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
+          if (salesViewModel.isLoading && salesViewModel.sales.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        if (salesViewModel.errorMessage.isNotEmpty &&
-            salesViewModel.sales.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Only show date filter on Sales History tab
-                Text(
-                  'Error: ${salesViewModel.errorMessage}',
-                  style: const TextStyle(color: Colors.red),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loadSales,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          );
-        }
+          if (salesViewModel.errorMessage.isNotEmpty &&
+              salesViewModel.sales.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Only show date filter on Sales History tab
+                  Text(
+                    'Error: ${salesViewModel.errorMessage}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadSales,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
 
-        if (displaySales.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                InkWell(
-                  onTap: () => _showDateFilterBottomSheet(),
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.all(10),
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[700],
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Filter by date',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 12,
+          if (displaySales.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  InkWell(
+                    onTap: () => _showDateFilterBottomSheet(),
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[700],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Filter by date',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                              IconButton(
-                                iconSize: 20,
+                                IconButton(
+                                  iconSize: 20,
+                                  color: Colors.white,
+                                  icon: const Icon(Icons.filter_list),
+                                  onPressed: () => _showDateFilterBottomSheet(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Container()),
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _searchQuery.isNotEmpty ||
+                            _startDate != null ||
+                            _endDate != null
+                        ? 'No sales found matching your criteria'
+                        : 'No sales recorded yet',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  Expanded(child: Container()),
+                ],
+              ),
+            );
+          }
+
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => _showDateFilterBottomSheet(),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[700],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Filter by date',
+                              style: GoogleFonts.poppins(
                                 color: Colors.white,
-                                icon: const Icon(Icons.filter_list),
-                                onPressed: () => _showDateFilterBottomSheet(),
+                                fontSize: 12,
                               ),
-                            ],
+                            ),
+                            IconButton(
+                              iconSize: 20,
+                              color: Colors.white,
+                              icon: const Icon(Icons.filter_list),
+                              onPressed: () => _showDateFilterBottomSheet(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              Expanded(
+                child: ListView.builder(
+                  controller: _salesScrollController,
+                  physics: AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(15),
+                  itemCount: displaySales.length + (_isLoadingMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == displaySales.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
+                    final sale = displaySales[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 15),
+                      child: ListTile(
+                        title: Text(
+                          sale.id != null
+                              ? 'Order #${sale.id!.substring(0, 8)}'
+                              : 'Order',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(child: Container()),
-                Icon(
-                  Icons.receipt_long_outlined,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _searchQuery.isNotEmpty ||
-                          _startDate != null ||
-                          _endDate != null
-                      ? 'No sales found matching your criteria'
-                      : 'No sales recorded yet',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                Expanded(child: Container()),
-              ],
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            InkWell(
-              onTap: () => _showDateFilterBottomSheet(),
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.all(10),
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[700],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Filter by date',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 12,
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              DateFormat('MMM dd, yyyy - hh:mm a').format(
+                                DateTime.parse(sale.createdAt).toLocal(),
+                              ),
+                              style: GoogleFonts.poppins(fontSize: 12),
                             ),
-                          ),
-                          IconButton(
-                            iconSize: 20,
-                            color: Colors.white,
-                            icon: const Icon(Icons.filter_list),
-                            onPressed: () => _showDateFilterBottomSheet(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            Expanded(
-              child: ListView.builder(
-                controller: _salesScrollController,
-                padding: const EdgeInsets.all(15),
-                itemCount: displaySales.length + (_isLoadingMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == displaySales.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
+                            Text(
+                              '${sale.entries.length} item(s) - \$${sale.totalPrice.toStringAsFixed(2)}',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _showSaleDetailsBottomSheet(context, sale),
                       ),
                     );
-                  }
-
-                  final sale = displaySales[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 15),
-                    child: ListTile(
-                      title: Text(
-                        sale.id != null
-                            ? 'Order #${sale.id!.substring(0, 8)}'
-                            : 'Order',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat(
-                              'MMM dd, yyyy - hh:mm a',
-                            ).format(DateTime.parse(sale.createdAt).toLocal()),
-                            style: GoogleFonts.poppins(fontSize: 12),
-                          ),
-                          Text(
-                            '${sale.entries.length} item(s) - \$${sale.totalPrice.toStringAsFixed(2)}',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.blue[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _showSaleDetailsBottomSheet(context, sale),
-                    ),
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-          ],
-        );
-      },
-    ));
+            ],
+          );
+        },
+      ),
+    );
   }
 
   Future<void> makePhoneCall(String phoneNumber) async {
@@ -1988,5 +2003,3 @@ Future<void> _refreshSales() async {
     );
   }
 }
-
-
