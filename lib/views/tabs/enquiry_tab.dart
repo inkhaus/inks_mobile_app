@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:inkhaus/models/enquiry_model.dart';
 import 'package:inkhaus/models/appointment_model.dart';
+import 'package:inkhaus/models/enquiry_model.dart';
 import 'package:inkhaus/services/api_service.dart';
 import 'package:inkhaus/views/widgets/enquiry_detail_bottom_sheet.dart';
+import 'package:inkhaus/views/widgets/appointment_detail_bottom_sheet.dart';
+import 'package:intl/intl.dart';
 
 class EnquiryTab extends StatefulWidget {
   const EnquiryTab({super.key});
@@ -179,6 +180,39 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
     }
   }
 
+  // Pull-to-refresh handlers
+  Future<void> _refreshEnquiries() async {
+    try {
+      final results = await _apiService.getAllEnquiries(skip: 0, limit: _pageSize);
+      setState(() {
+        _enquiries = results;
+        _enquiryPage = 1;
+        _hasMoreEnquiries = results.length == _pageSize;
+        _enquiryError = '';
+      });
+    } catch (e) {
+      setState(() {
+        _enquiryError = e.toString().replaceAll('Exception: ', '');
+      });
+    }
+  }
+
+  Future<void> _refreshAppointments() async {
+    try {
+      final results = await _apiService.getAllAppointments(skip: 0, limit: _pageSize);
+      setState(() {
+        _appointments = results;
+        _appointmentPage = 1;
+        _hasMoreAppointments = results.length == _pageSize;
+        _appointmentError = '';
+      });
+    } catch (e) {
+      setState(() {
+        _appointmentError = e.toString().replaceAll('Exception: ', '');
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -212,26 +246,36 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
       return const Center(child: CircularProgressIndicator());
     }
     if (_enquiryError.isNotEmpty && _enquiries.isEmpty) {
-      return _buildErrorState(_enquiryError, _loadEnquiries);
+      return RefreshIndicator(
+        onRefresh: _refreshEnquiries,
+        child: _buildErrorState(_enquiryError, _loadEnquiries),
+      );
     }
     if (_enquiries.isEmpty) {
-      return _buildEmptyState('No enquiries yet');
+      return RefreshIndicator(
+        onRefresh: _refreshEnquiries,
+        child: _buildEmptyState('No enquiries yet'),
+      );
     }
 
-    return ListView.builder(
-      controller: _enquiryScrollController,
-      padding: const EdgeInsets.all(12),
-      itemCount: _enquiries.length + (_isLoadingMoreEnquiries ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _enquiries.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final enquiry = _enquiries[index];
-        return _buildEnquiryCard(enquiry);
-      },
+    return RefreshIndicator(
+      onRefresh: _refreshEnquiries,
+      child: ListView.builder(
+        physics: AlwaysScrollableScrollPhysics(),
+        controller: _enquiryScrollController,
+        padding: const EdgeInsets.all(12),
+        itemCount: _enquiries.length + (_isLoadingMoreEnquiries ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _enquiries.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final enquiry = _enquiries[index];
+          return _buildEnquiryCard(enquiry);
+        },
+      ),
     );
   }
 
@@ -240,31 +284,42 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
       return const Center(child: CircularProgressIndicator());
     }
     if (_appointmentError.isNotEmpty && _appointments.isEmpty) {
-      return _buildErrorState(_appointmentError, _loadAppointments);
+      return RefreshIndicator(
+        onRefresh: _refreshAppointments,
+        child: _buildErrorState(_appointmentError, _loadAppointments),
+      );
     }
     if (_appointments.isEmpty) {
-      return _buildEmptyState('No appointments yet');
+      return RefreshIndicator(
+        onRefresh: _refreshAppointments,
+        child: _buildEmptyState('No appointments yet'),
+      );
     }
 
-    return ListView.builder(
-      controller: _appointmentScrollController,
-      padding: const EdgeInsets.all(12),
-      itemCount: _appointments.length + (_isLoadingMoreAppointments ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _appointments.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final appointment = _appointments[index];
-        return _buildAppointmentCard(appointment);
-      },
+    return RefreshIndicator(
+      onRefresh: _refreshAppointments,
+      child: ListView.builder(
+        physics: AlwaysScrollableScrollPhysics(),
+        controller: _appointmentScrollController,
+        padding: const EdgeInsets.all(12),
+        itemCount: _appointments.length + (_isLoadingMoreAppointments ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _appointments.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final appointment = _appointments[index];
+          return _buildAppointmentCard(appointment);
+        },
+      ),
     );
   }
 
   Widget _buildErrorState(String message, VoidCallback onRetry) {
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(), // Enables pull-to-refresh even when content doesn't scroll
       child: Container(
         height: MediaQuery.of(context).size.height * 0.6,
         padding: const EdgeInsets.all(20),
@@ -305,6 +360,7 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
 
   Widget _buildEmptyState(String message) {
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(), // Enables pull-to-refresh even when content doesn't scroll
       child: Container(
         height: MediaQuery.of(context).size.height * 0.6,
         padding: const EdgeInsets.all(20),
@@ -381,40 +437,43 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
     final statusColor = _appointmentStatusColor(appointment.status);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        title: Text(
-          appointment.fullname,
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${appointment.purpose} • ${appointment.day} • ${appointment.time}',
-              style: GoogleFonts.poppins(fontSize: 12),
-            ),
-            if (appointment.specialRequest.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  appointment.specialRequest,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87),
-                ),
-              ),
-          ],
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: statusColor),
+      child: InkWell(
+        onTap: () => _showAppointmentDetails(appointment),
+        child: ListTile(
+          title: Text(
+            appointment.fullname,
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
-          child: Text(
-            _formatAppointmentStatus(appointment.status),
-            style: GoogleFonts.poppins(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${appointment.purpose} • ${appointment.day} • ${appointment.time}',
+                style: GoogleFonts.poppins(fontSize: 12),
+              ),
+              if (appointment.specialRequest.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    appointment.specialRequest,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87),
+                  ),
+                ),
+            ],
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: statusColor),
+            ),
+            child: Text(
+              _formatAppointmentStatus(appointment.status),
+              style: GoogleFonts.poppins(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600),
+            ),
           ),
         ),
       ),
@@ -435,7 +494,6 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
   }
 
   Color _appointmentStatusColor(String status) {
-
     switch (status) {
       case 'pending_fulfilment':
         return Colors.orange;
@@ -504,6 +562,31 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
               final index = _enquiries.indexWhere((e) => e.id == updatedEnquiry.id);
               if (index != -1) {
                 _enquiries[index] = updatedEnquiry;
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+  
+  void _showAppointmentDetails(AppointmentModel appointment) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, controller) => AppointmentDetailBottomSheet(
+          appointment: appointment,
+          onStatusUpdated: (updatedAppointment) {
+            setState(() {
+              final index = _appointments.indexWhere((a) => a.id == updatedAppointment.id);
+              if (index != -1) {
+                _appointments[index] = updatedAppointment;
               }
             });
           },

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -389,7 +387,7 @@ class _SalesTabState extends State<SalesTab>
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  '\$${product.unitPrice.toStringAsFixed(2)}',
+                  'GHS ${product.unitPrice.toStringAsFixed(2)}',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -555,7 +553,6 @@ class _SalesTabState extends State<SalesTab>
                   ),
                 ),
               ),
-
               Expanded(
                 child: ListView.builder(
                   controller: _salesScrollController,
@@ -594,7 +591,7 @@ class _SalesTabState extends State<SalesTab>
                               style: GoogleFonts.poppins(fontSize: 12),
                             ),
                             Text(
-                              '${sale.entries.length} item(s) - \$${sale.totalPrice.toStringAsFixed(2)}',
+                              '${sale.entries.length} item(s) - GHS ${sale.totalPrice.toStringAsFixed(2)}',
                               style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w500,
                                 color: Colors.blue[700],
@@ -944,7 +941,7 @@ class _SalesTabState extends State<SalesTab>
 
                           // Unit price
                           Text(
-                            'Unit Price (\$)',
+                            'Unit Price (GHS)',
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w500,
                             ),

@@ -254,4 +254,31 @@ class ApiService {
       throw Exception('An unexpected error occurred: $e');
     }
   }
+  
+  // Update appointment status
+  Future<AppointmentModel> updateAppointmentStatus({
+    required String appointmentId,
+    required String status,
+    required String updatedBy,
+  }) async {
+    try {
+      final response = await _dio.patch(
+        '${AppConstants.appointmentsEndpoint}/$appointmentId/status',
+        data: jsonEncode({
+          'status': status,
+          'updatedBy': updatedBy,
+        }),
+      );
+      
+      return AppointmentModel.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(e.response?.data['detail'] ?? 'Failed to update appointment status');
+      } else {
+        throw Exception('Network error occurred. Please check your connection.');
+      }
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
 }
