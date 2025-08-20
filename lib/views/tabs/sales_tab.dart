@@ -24,6 +24,7 @@ class _SalesTabState extends State<SalesTab>
   final ApiService _apiService = ApiService();
   String _userEmail = '';
   String _searchQuery = '';
+  String _accountType = '';
   List<SalesModel> _filteredSales = [];
   DateTime? _startDate;
   DateTime? _endDate;
@@ -68,6 +69,7 @@ class _SalesTabState extends State<SalesTab>
     if (user != null && mounted) {
       setState(() {
         _userEmail = user.email;
+        _accountType = user.accountType;
       });
     }
   }
@@ -151,6 +153,18 @@ class _SalesTabState extends State<SalesTab>
     });
   }
 
+  Future<void> _refreshProducts() async {
+  await _loadProducts();
+}
+
+Future<void> _refreshSales() async {
+  setState(() {
+    _currentPage = 0;
+    _filteredSales.clear();
+  });
+  await _loadSales();
+}
+
   List<String> paymentChannels = ['Cash', 'Mobile Money', 'Bank Transfer'];
   Map<String, String> paymentChannelsMap = {
     'Cash': 'cash',
@@ -212,7 +226,7 @@ class _SalesTabState extends State<SalesTab>
           Column(
             children: [
               Expanded(
-                child: Consumer<SalesViewModel>(
+                child: RefreshIndicator(onRefresh: _refreshProducts, child: Consumer<SalesViewModel>(
                   builder: (context, salesViewModel, child) {
                     if (salesViewModel.isLoading &&
                         salesViewModel.products.isEmpty) {
@@ -264,7 +278,7 @@ class _SalesTabState extends State<SalesTab>
 
                     return _buildProductGrid(salesViewModel.products);
                   },
-                ),
+                )),
               ),
             ],
           ),
@@ -274,7 +288,7 @@ class _SalesTabState extends State<SalesTab>
           // Sales History Tab
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: _accountType != 'admin' && _tabController.index == 0 ?null : FloatingActionButton(
         onPressed: () {
           if (_tabController.index == 0) {
             _showAddProductBottomSheet();
@@ -394,7 +408,7 @@ class _SalesTabState extends State<SalesTab>
   }
 
   Widget _buildSalesHistoryTab() {
-    return Consumer<SalesViewModel>(
+    return RefreshIndicator(onRefresh: _refreshSales, child: Consumer<SalesViewModel>(
       builder: (context, salesViewModel, child) {
         // Use filtered sales if search is active, otherwise use all sales
         final displaySales =
@@ -584,7 +598,7 @@ class _SalesTabState extends State<SalesTab>
           ],
         );
       },
-    );
+    ));
   }
 
   Future<void> makePhoneCall(String phoneNumber) async {
@@ -801,7 +815,7 @@ class _SalesTabState extends State<SalesTab>
     String artworkUrl = '';
     String businessUnit = '';
 
-    final businessUnits = ['inkhaus'];
+    final businessUnits = ['inkhaus', 'snaphaus'];
 
     showModalBottomSheet(
       context: context,
@@ -1974,3 +1988,5 @@ class _SalesTabState extends State<SalesTab>
     );
   }
 }
+
+
