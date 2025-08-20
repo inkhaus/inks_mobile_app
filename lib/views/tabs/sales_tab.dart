@@ -178,6 +178,51 @@ class _SalesTabState extends State<SalesTab>
 
   int currentTab = 0;
 
+  List<Map<String, dynamic>> _currentSaleItems = [];
+  double _currentSaleTotal = 0.0;
+
+  void _calculateSaleTotal() {
+    _currentSaleTotal = _currentSaleItems.fold(0.0, (sum, item) {
+      return sum + (item['unitPrice'] * item['quantity']);
+    });
+  }
+
+  void _addItemToSale(ProductModel product, int quantity) {
+   
+    int existingIndex = _currentSaleItems.indexWhere(
+      (item) => item['product'].id == product.id
+    );
+
+    if (existingIndex != -1) {
+      
+      _currentSaleItems[existingIndex]['quantity'] += quantity;
+    } else {
+      
+      _currentSaleItems.add({
+        'product': product,
+        'quantity': quantity,
+        'unitPrice': product.unitPrice,
+      });
+    }
+    _calculateSaleTotal();
+  }
+
+ 
+  void _removeItemFromSale(int index) {
+    _currentSaleItems.removeAt(index);
+    _calculateSaleTotal();
+  }
+
+
+  void _updateItemQuantity(int index, int newQuantity) {
+    if (newQuantity <= 0) {
+      _removeItemFromSale(index);
+    } else {
+      _currentSaleItems[index]['quantity'] = newQuantity;
+      _calculateSaleTotal();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1107,11 +1152,9 @@ class _SalesTabState extends State<SalesTab>
   }
 
   void _showAddSaleBottomSheet(BuildContext context) {
-    final salesViewModel = Provider.of<SalesViewModel>(context, listen: false);
-    ProductModel? selectedProduct;
-    int quantity = 1;
-    double unitPrice = 0.0;
-    double totalPrice = 0.0;
+    // Reset current sale items
+    _currentSaleItems.clear();
+    _currentSaleTotal = 0.0;
 
     showModalBottomSheet(
       context: context,
@@ -1125,15 +1168,12 @@ class _SalesTabState extends State<SalesTab>
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.9,
+          initialChildSize: 0.8,
+          minChildSize: 0.6,
+          maxChildSize: 0.95,
           expand: false,
           builder: (context, scrollController) => StatefulBuilder(
             builder: (context, setState) {
-              // Calculate total price whenever product or quantity changes
-              totalPrice = (selectedProduct?.unitPrice ?? 0) * quantity;
-
               return Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -1153,7 +1193,7 @@ class _SalesTabState extends State<SalesTab>
 
                     // Title
                     Text(
-                      'Add Sale',
+                      'Create New Sale',
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
@@ -1166,239 +1206,222 @@ class _SalesTabState extends State<SalesTab>
                       child: ListView(
                         controller: scrollController,
                         children: [
-                          // Product dropdown
-                          Text(
-                            'Service/Product',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
+                          // Customer Information Section
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue[200]!),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          DropdownButtonFormField<ProductModel>(
-                            value: selectedProduct,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            hint: Text(
-                              'Select a product',
-                              style: GoogleFonts.poppins(),
-                            ),
-                            items: salesViewModel.products.map((product) {
-                              return DropdownMenuItem<ProductModel>(
-                                value: product,
-                                child: Text(
-                                  product.title,
-                                  style: GoogleFonts.poppins(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Customer Information',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue[800],
+                                  ),
                                 ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedProduct = value;
-                                unitPrice = value?.unitPrice ?? 0;
-                              });
-                            },
-                          ),
+                                const SizedBox(height: 12),
 
-                          const SizedBox(height: 16),
+                                // Customer Name
+                                TextFormField(
+                                  controller: customerNameController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Customer Name',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
 
-                          // Customer Name
-                          Text(
-                            'Customer Name',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
+                                const SizedBox(height: 12),
+
+                                // Customer Phone Number
+                                TextFormField(
+                                  controller: customerPhoneNumberController,
+                                  keyboardType: TextInputType.phone,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(10),
+                                  ],
+                                  decoration: InputDecoration(
+                                    labelText: 'Phone Number',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Customer Email
+                                TextFormField(
+                                  controller: customerEmailController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Email (Optional)',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Payment Channel
+                                DropdownButtonFormField<String>(
+                                  value: selectedPaymentChannel,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedPaymentChannel = value;
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'Payment Method',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  items: paymentChannels.map((channel) {
+                                    return DropdownMenuItem<String>(
+                                      value: paymentChannelsMap[channel],
+                                      child: Text(channel),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: customerNameController,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+
+                          const SizedBox(height: 20),
+
+                          // Items Section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Items (${_currentSaleItems.length})',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
+                              ElevatedButton.icon(
+                                onPressed: () => _showAddProductDialog(setState),
+                                icon: const Icon(Icons.add, size: 18),
+                                label: Text(
+                                  'Add Item',
+                                  style: GoogleFonts.poppins(fontSize: 12),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green[600],
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Customer Phone Number
-                          Text(
-                            'Customer Phone Number',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: customerPhoneNumberController,
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
                             ],
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
                           ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
 
-                          // Customer Email
-                          Text(
-                            'Customer Email',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            controller: customerEmailController,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                          // Items list or empty state
+                          if (_currentSaleItems.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[300]!),
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.shopping_cart_outlined,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'No items added yet',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Tap "Add Item" to get started',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            ...List.generate(
+                              _currentSaleItems.length,
+                              (index) => _buildSaleItemCard(
+                                _currentSaleItems[index],
+                                index,
+                                setState,
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
 
-                          // Quantity field
-                          Text(
-                            'Quantity',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            initialValue: quantity.toString(),
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                          // Total section
+                          if (_currentSaleItems.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.blue[200]!),
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                quantity = int.tryParse(value) ?? 1;
-                                if (quantity < 1) quantity = 1;
-                              });
-                            },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Payment Channel
-                          Text(
-                            'Payment Channel',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          DropdownButtonFormField<String>(
-                            onChanged: (value) {
-                              setState(() {
-                                selectedPaymentChannel = value;
-                              });
-                            },
-                            items: paymentChannels.map((channel) {
-                              return DropdownMenuItem<String>(
-                                value: paymentChannelsMap[channel],
-                                child: Text(channel),
-                              );
-                            }).toList(),
-                            value: selectedPaymentChannel,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Total Amount:',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'GHS ${_currentSaleTotal.toStringAsFixed(2)}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[700],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Unit price (read-only)
-                          Text(
-                            'Unit Price',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            readOnly: true,
-                            controller: TextEditingController(
-                              text: '${unitPrice.toStringAsFixed(2)}',
-                            ),
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey[100],
-                            ),
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Total price (calculated)
-                          Text(
-                            'Total Price',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            readOnly: true,
-                            controller: TextEditingController(
-                              text: '${totalPrice.toStringAsFixed(2)}',
-                            ),
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey[100],
-                            ),
-                          ),
 
                           const SizedBox(height: 30),
                         ],
@@ -1423,50 +1446,61 @@ class _SalesTabState extends State<SalesTab>
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: selectedProduct == null
+                            onPressed: _currentSaleItems.isEmpty ||
+                                    customerNameController.text.trim().isEmpty ||
+                                    selectedPaymentChannel == null
                                 ? null
                                 : () async {
-                                    // Create sale entry
+                                    final salesViewModel = Provider.of<SalesViewModel>(
+                                      context,
+                                      listen: false,
+                                    );
+
+                                    // Create sale entries from current items
                                     final nowIso = DateTime.now()
                                         .toUtc()
                                         .toIso8601String();
-                                    final entry = SalesEntryModel(
-                                      service: selectedProduct!.title,
-                                      unitPrice: selectedProduct!.unitPrice,
-                                      quantity: quantity,
-                                      createdAt: nowIso,
-                                    );
 
-                                    // Create sale
-                                    final result = await salesViewModel
-                                        .createSale(
-                                          entries: [entry],
-                                          customer: CustomerModel(
-                                            fullname: customerNameController
-                                                .text
-                                                .trim(),
-                                            phoneNumber:
-                                                customerPhoneNumberController
-                                                    .text
-                                                    .trim(),
-                                            email: customerEmailController.text
-                                                .trim(),
-                                            createdAt: nowIso,
-                                          ),
-                                          paymentChannel:
-                                              selectedPaymentChannel ?? 'cash',
-                                          recordedBy: _userEmail,
-                                        );
+                                    final entries = _currentSaleItems.map((item) {
+                                      return SalesEntryModel(
+                                        service: item['product'].title,
+                                        unitPrice: item['unitPrice'],
+                                        quantity: item['quantity'],
+                                        createdAt: nowIso,
+                                      );
+                                    }).toList();
+
+                                    // Create the sale
+                                    final result = await salesViewModel.createSale(
+                                      entries: entries,
+                                      customer: CustomerModel(
+                                        fullname: customerNameController.text.trim(),
+                                        phoneNumber:
+                                            customerPhoneNumberController.text.trim(),
+                                        email: customerEmailController.text.trim(),
+                                        createdAt: nowIso,
+                                      ),
+                                      paymentChannel: selectedPaymentChannel!,
+                                      recordedBy: _userEmail,
+                                    );
 
                                     if (result != null) {
                                       Navigator.pop(context);
                                       Fluttertoast.showToast(
-                                        msg: 'Sale added successfully!',
+                                        msg: 'Sale with ${_currentSaleItems.length} items created successfully!',
                                         toastLength: Toast.LENGTH_LONG,
                                         gravity: ToastGravity.TOP,
                                         backgroundColor: Colors.greenAccent,
                                         textColor: Colors.white,
                                       );
+
+                                      // Clear form data
+                                      customerNameController.clear();
+                                      customerPhoneNumberController.clear();
+                                      customerEmailController.clear();
+                                      selectedPaymentChannel = null;
+                                      _currentSaleItems.clear();
+                                      _currentSaleTotal = 0.0;
 
                                       // Refresh sales list
                                       _loadSales();
@@ -1481,7 +1515,9 @@ class _SalesTabState extends State<SalesTab>
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: selectedProduct == null
+                              backgroundColor: _currentSaleItems.isEmpty ||
+                                      customerNameController.text.trim().isEmpty ||
+                                      selectedPaymentChannel == null
                                   ? Colors.grey
                                   : Colors.blue[700],
                               padding: const EdgeInsets.symmetric(vertical: 15),
@@ -1490,7 +1526,9 @@ class _SalesTabState extends State<SalesTab>
                               ),
                             ),
                             child: Text(
-                              'Add Sale',
+                              _currentSaleItems.isEmpty
+                                  ? 'Add Items First'
+                                  : 'Complete Sale',
                               style: GoogleFonts.poppins(color: Colors.white),
                             ),
                           ),
@@ -1999,4 +2037,212 @@ class _SalesTabState extends State<SalesTab>
       ),
     );
   }
+
+   Widget _buildSaleItemCard(Map<String, dynamic> item, int index, StateSetter setState) {
+    ProductModel product = item['product'];
+    int quantity = item['quantity'];
+    double subtotal = item['unitPrice'] * quantity;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Product info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.title,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    'GHS ${item['unitPrice'].toStringAsFixed(2)} each',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Quantity controls
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _updateItemQuantity(index, quantity - 1);
+                    });
+                  },
+                  icon: const Icon(Icons.remove_circle_outline),
+                  iconSize: 20,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    quantity.toString(),
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _updateItemQuantity(index, quantity + 1);
+                    });
+                  },
+                  icon: const Icon(Icons.add_circle_outline),
+                  iconSize: 20,
+                ),
+              ],
+            ),
+
+            // Subtotal and remove button
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'GHS ${subtotal.toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue[700],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _removeItemFromSale(index);
+                    });
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  iconSize: 18,
+                  color: Colors.red,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+void _showAddProductDialog(StateSetter parentSetState) {
+    final salesViewModel = Provider.of<SalesViewModel>(context, listen: false);
+    ProductModel? selectedProduct;
+    int quantity = 1;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add Product', style: GoogleFonts.poppins()),
+        contentPadding: const EdgeInsets.all(10),
+        content: SizedBox(
+           width: MediaQuery.of(context).size.width * 0.8,
+          child: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Product dropdown
+              DropdownButtonFormField<ProductModel>(
+                value: selectedProduct,
+                decoration: InputDecoration(
+                  
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  labelText: 'Select Product',
+                ),
+                items: salesViewModel.products.map((product) {
+                  return DropdownMenuItem<ProductModel>(
+                    value: product,
+                    child: Text(
+                      product.title,
+                      style: GoogleFonts.poppins(),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedProduct = value;
+                  });
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Quantity field
+              TextFormField(
+                initialValue: quantity.toString(),
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  labelText: 'Quantity',
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    quantity = int.tryParse(value) ?? 1;
+                    if (quantity < 1) quantity = 1;
+                  });
+                },
+              ),
+
+              if (selectedProduct != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Subtotal:',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        'GHS ${(selectedProduct!.unitPrice * quantity).toStringAsFixed(2)}',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.poppins()),
+          ),
+          ElevatedButton(
+            onPressed: selectedProduct == null ? null : () {
+              parentSetState(() {
+                _addItemToSale(selectedProduct!, quantity);
+              });
+              Navigator.pop(context);
+            },
+            child: Text('Add', style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+
