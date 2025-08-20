@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:inkhaus/models/enquiry_model.dart';
 import 'package:inkhaus/models/appointment_model.dart';
 import 'package:inkhaus/services/api_service.dart';
+import 'package:inkhaus/views/widgets/enquiry_detail_bottom_sheet.dart';
 
 class EnquiryTab extends StatefulWidget {
   const EnquiryTab({super.key});
@@ -339,6 +340,7 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
+        onTap: () => _showEnquiryDetails(enquiry),
         title: Text(
           enquiry.fullname,
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
@@ -483,5 +485,30 @@ class _EnquiryTabState extends State<EnquiryTab> with SingleTickerProviderStateM
       default:
         return serviceCategory;
     }
+  }
+  
+  void _showEnquiryDetails(EnquiryModel enquiry) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+         expand: false,
+        builder: (_, controller) => EnquiryDetailBottomSheet(
+          enquiry: enquiry,
+          onStatusUpdated: (updatedEnquiry) {
+            setState(() {
+              final index = _enquiries.indexWhere((e) => e.id == updatedEnquiry.id);
+              if (index != -1) {
+                _enquiries[index] = updatedEnquiry;
+              }
+            });
+          },
+        ),
+      ),
+    );
   }
 }
