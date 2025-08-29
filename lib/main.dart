@@ -9,6 +9,7 @@ import 'package:inkhaus/viewmodels/dashboard_viewmodel.dart';
 import 'package:inkhaus/viewmodels/auth_viewmodel.dart';
 import 'package:inkhaus/viewmodels/onboarding_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:inkhaus/viewmodels/expense_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
         ChangeNotifierProvider(create: (_) => SalesViewModel()),
         ChangeNotifierProvider(create: (_) => DashboardViewModel()),
+        ChangeNotifierProvider(create: (_) => ExpenseViewModel()),
       ],
       child: MaterialApp(
         title: 'InkHaus POS',

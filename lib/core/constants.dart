@@ -10,6 +10,7 @@ class AppConstants {
   static const String salesEndpoint = '$apiVersion/sales/';
   static const String enquiriesEndpoint = '$apiVersion/enquiries/';
   static const String appointmentsEndpoint = '$apiVersion/appointments/';
+  static const String expensesEndpoint = '$apiVersion/expenses/';
   
   // SharedPreferences Keys
   static const String userIdKey = 'user_id';

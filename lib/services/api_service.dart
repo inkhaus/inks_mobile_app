@@ -6,6 +6,7 @@ import 'package:inkhaus/models/product_model.dart';
 import 'package:inkhaus/models/sales_model.dart';
 import 'package:inkhaus/models/enquiry_model.dart';
 import 'package:inkhaus/models/appointment_model.dart';
+import 'package:inkhaus/models/expense_model.dart';
 
 class ApiService {
   final Dio _dio = Dio(BaseOptions(
@@ -281,4 +282,45 @@ class ApiService {
       throw Exception('An unexpected error occurred: $e');
     }
   }
+
+  // Create expense
+Future<ExpenseModel> createExpense(ExpenseModel expense) async {
+  try {
+    final response = await _dio.post(
+      AppConstants.expensesEndpoint,
+      data: jsonEncode(expense.toJson()),
+    );
+    
+    return ExpenseModel.fromJson(response.data);
+  } on DioException catch (e) {
+    if (e.response != null) {
+      throw Exception(e.response?.data['detail'] ?? 'Failed to create expense');
+    } else {
+      throw Exception('Network error occurred. Please check your connection.');
+    }
+  } catch (e) {
+    throw Exception('An unexpected error occurred: $e');
+  }
+}
+
+// Get all expenses with pagination
+Future<List<ExpenseModel>> getAllExpenses({int skip = 0, int limit = 100}) async {
+  try {
+    final response = await _dio.get(
+      '${AppConstants.expensesEndpoint}?skip=$skip&limit=$limit',
+    );
+    
+    return (response.data as List)
+        .map((expense) => ExpenseModel.fromJson(expense))
+        .toList();
+  } on DioException catch (e) {
+    if (e.response != null) {
+      throw Exception(e.response?.data['detail'] ?? 'Failed to get expenses');
+    } else {
+      throw Exception('Network error occurred. Please check your connection.');
+    }
+  } catch (e) {
+    throw Exception('An unexpected error occurred: $e');
+  }
+}
 }
