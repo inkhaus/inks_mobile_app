@@ -175,6 +175,7 @@ class _SalesTabState extends State<SalesTab>
   TextEditingController customerNameController = TextEditingController();
   TextEditingController customerPhoneNumberController = TextEditingController();
   TextEditingController customerEmailController = TextEditingController();
+  TextEditingController notesController = TextEditingController();
 
   int currentTab = 0;
 
@@ -753,6 +754,11 @@ class _SalesTabState extends State<SalesTab>
                       "Recorded By: ${sale.recordedBy}",
                       style: GoogleFonts.poppins(),
                     ),
+                    SizedBox(height: 8),
+                    Text(
+                      "Note: ${sale.note}",
+                      style: GoogleFonts.poppins(),
+                    ),
 
                     const SizedBox(height: 16),
                     Text(
@@ -1311,7 +1317,20 @@ class _SalesTabState extends State<SalesTab>
                               ],
                             ),
                           ),
-
+                          const SizedBox(height: 12,),
+                          TextFormField(
+                                  controller: notesController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Note (Optional)',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
                           const SizedBox(height: 20),
 
                           // Items Section
@@ -1482,6 +1501,7 @@ class _SalesTabState extends State<SalesTab>
                                       ),
                                       paymentChannel: selectedPaymentChannel!,
                                       recordedBy: _userEmail,
+                                      note: notesController.text.trim(),
                                     );
 
                                     if (result != null) {
@@ -2151,29 +2171,31 @@ void _showAddProductDialog(StateSetter parentSetState) {
             children: [
               // Product dropdown
               DropdownButtonFormField<ProductModel>(
-                value: selectedProduct,
-                decoration: InputDecoration(
-                  
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  labelText: 'Select Product',
-                ),
-                items: salesViewModel.products.map((product) {
-                  return DropdownMenuItem<ProductModel>(
-                    value: product,
-                    child: Text(
-                      product.title,
-                      style: GoogleFonts.poppins(),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedProduct = value;
-                  });
-                },
-              ),
+  value: selectedProduct,
+  decoration: InputDecoration(
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+    labelText: 'Select Product',
+  ),
+  isExpanded: true, // This is the key fix - allows dropdown to use full width
+  items: salesViewModel.products.map((product) {
+    return DropdownMenuItem<ProductModel>(
+      value: product,
+      child: Text(
+        product.title,
+        style: GoogleFonts.poppins(),
+        overflow: TextOverflow.ellipsis, // Handle long text
+        maxLines: 1, // Limit to single line
+      ),
+    );
+  }).toList(),
+  onChanged: (value) {
+    setState(() {
+      selectedProduct = value;
+    });
+  },
+),
 
               const SizedBox(height: 16),
 
