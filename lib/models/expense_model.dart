@@ -34,15 +34,18 @@ class ExpenseModel {
   final String notes;
   final PayeeModel payee;
   final String createdAt;
+  final String? recordedBy;
 
   ExpenseModel({
     this.id,
+    this.recordedBy,
     required this.amount,
     required this.category,
     required this.evidence,
     required this.notes,
     required this.payee,
     required this.createdAt,
+    
   });
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
@@ -54,6 +57,7 @@ class ExpenseModel {
       notes: json['notes'],
       payee: PayeeModel.fromJson(json['payee']),
       createdAt: json['createdAt'],
+      recordedBy: json['recordedBy']
     );
   }
 
@@ -65,6 +69,7 @@ class ExpenseModel {
       'notes': notes,
       'payee': payee.toJson(),
       'createdAt': createdAt,
+      'recordedBy': recordedBy,
     };
     
     if (id != null) {

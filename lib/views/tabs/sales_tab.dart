@@ -1956,6 +1956,11 @@ class _SalesTabState extends State<SalesTab>
                       'Email: ${expense.payee.emailAddress.isNotEmpty ? expense.payee.emailAddress : 'Not provided'}',
                       style: GoogleFonts.poppins(),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Recorded By: ${expense.recordedBy}',
+                      style: GoogleFonts.poppins(),
+                    ),
                     const SizedBox(height: 16),
 
                     // Notes
@@ -2452,6 +2457,7 @@ class _SalesTabState extends State<SalesTab>
                                       emailAddress: payeeEmailController.text
                                           .trim(),
                                     ),
+                                    recordedBy:_userEmail
                                   );
 
                               if (result != null) {

@@ -54,6 +54,7 @@ class ExpenseViewModel extends ChangeNotifier {
     required String evidence,
     required String notes,
     required PayeeModel payee,
+    required String recordedBy,
   }) async {
     _isLoading = true;
     _errorMessage = '';
@@ -69,6 +70,7 @@ class ExpenseViewModel extends ChangeNotifier {
         notes: notes,
         payee: payee,
         createdAt: now,
+        recordedBy: recordedBy,
       );
       
       final createdExpense = await _apiService.createExpense(expense);
